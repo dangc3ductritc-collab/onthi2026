@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Học Tập - Giáo Viên & Học Sinh</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        :root { 
+            --primary: #1b5e20; 
+            --secondary: #c8e6c9; 
+            --accent: #ffab00; 
+            --error: #d32f2f; 
+            --success: #2e7d32; 
+            --bg: #f0f4f0; 
+        }
+        
+        * { 
+            box-sizing: border-box; 
+            margin: 0;
+            padding: 0;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg); 
+            padding-bottom: 50px; 
+        }
+        
+        header { 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--success) 100%);
+            color: white; 
+            padding: 20px; 
+            text-align: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+        }
+        
+        header h1 { 
+            margin: 0; 
+            font-size: 1.8em; 
+        }
+        
+        .user-info {
+            margin-top: 10px;
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .nav-tabs { 
+            display: flex; 
+            background: var(--success); 
+            overflow-x: auto; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .nav-tabs button { 
+            flex: 1; 
+            padding: 15px; 
+            border: none; 
+            background: none; 
+            color: white; 
+            cursor: pointer; 
+            font-weight: bold; 
+            min-width: 120px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .nav-tabs button:hover { 
+            background: rgba(255,255,255,0.1); 
+        }
+        
+        .nav-tabs button.active { 
+            background: white; 
+            color: var(--primary); 
+            border-radius: 10px 10px 0 0; 
+        }
+        
+        .container { 
+            max-width: 1200px; 
+            margin: 20px auto; 
+            padding: 0 15px; 
+        }
+        
+        .card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .card:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1); 
+        }
+        
+        .hidden { 
+            display: none !important; 
+        }
+        
+        /* Form Controls */
+        input, select, textarea { 
+            width: 100%;
+            padding: 10px; 
+            margin: 8px 0;
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 1em;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        /* Buttons */
+        .btn { 
+            padding: 12px 24px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            display: inline-block;
+        }
+        
+        .btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); 
+        }
+        
+        .btn:active { 
+            transform: translateY(0); 
+        }
+        
+        .btn-primary { 
+            background: var(--primary); 
+            color: white; 
+        }
+        
+        .btn-accent { 
+            background: var(--accent); 
+            color: #000; 
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+        
+        .btn-secondary { 
+            background: #555; 
+            color: white; 
+        }
+        
+        .btn:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed; 
+            transform: none;
+        }
+        
+        /* Checkbox Items */
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .checkbox-item:hover { 
+            background: #e8f5e9;
+            border-color: var(--primary);
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.3);
+            cursor: pointer;
+        }
+        
+        .checkbox-item label {
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        /* Fill Blanks */
+        .fill-blank {
+            display: inline-block;
+            min-width: 120px;
+            padding: 5px 10px;
+            border: none;
+            border-bottom: 2px solid var(--primary);
+            margin: 0 5px;
+            text-align: center;
+            font-size: 1em;
+            background: #fff;
+        }
+        
+        .fill-blank:focus {
+            outline: none;
+            border-bottom-color: var(--accent);
+            background: #fffef0;
+        }
+        
+        .fill-blank.correct {
+            background: #c8e6c9 !important;
+            border-bottom-color: green !important;
+            color: green;
+            font-weight: bold;
+        }
+        
+        .fill-blank.incorrect {
+            background: #ffcdd2 !important;
+            border-bottom-color: red !important;
+            color: red;
+            font-weight: bold;
+        }
+        
+        /* Drag and Drop */
+        .drag-container {
+            margin: 20px 0;
+        }
+        
+        .drag-sentence {
+            line-height: 2.5;
+            font-size: 1.1em;
+            margin: 15px 0;
+        }
+        
+        .drop-zone { 
+            display: inline-block; 
+            min-width: 120px; 
+            min-height: 40px;
+            border: 2px dashed #999; 
+            vertical-align: middle; 
+            margin: 0 5px; 
+            border-radius: 8px; 
+            background: #fff;
+            padding: 8px;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .drop-zone.drag-over { 
+            background: #e3f2fd; 
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+        
+        .drop-zone.correct {
+            background: #c8e6c9 !important;
+            border: 2px solid green !important;
+            color: green;
+            font-weight: bold;
+        }
+        
+        .drop-zone.incorrect {
+            background: #ffcdd2 !important;
+            border: 2px solid red !important;
+            color: red;
+            font-weight: bold;
+        }
+        
+        .drag-item { 
+            display: inline-block; 
+            padding: 10px 16px; 
+            background: var(--secondary); 
+            border: 2px solid var(--primary); 
+            margin: 5px; 
+            cursor: move; 
+            border-radius: 8px; 
+            font-size: 1em;
+            transition: all 0.2s;
+            user-select: none;
+            font-weight: 500;
+        }
+        
+        .drag-item:hover { 
+            background: #a5d6a7; 
+            transform: scale(1.05);
+        }
+        
+        .drag-item.dragging { 
+            opacity: 0.5; 
+            cursor: grabbing;
+        }
+        
+        .drag-pool { 
+            background: #f5f5f5; 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin-top: 20px;
+            border: 2px solid #ddd;
+        }
+        
+        .drag-pool-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        /* Score Display */
+        .score-box { 
+            text-align: center; 
+            padding: 30px; 
+            border: 3px solid var(--primary); 
+            border-radius: 12px; 
+            margin: 20px 0;
+            background: linear-gradient(135deg, #fff 0%, #f5f5f5 100%);
+        }
+        
+        .score-box h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .big-score { 
+            font-size: 4em; 
+            color: var(--primary); 
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            margin: 15px 0;
+        }
+        
+        .score-detail {
+            font-size: 1.2em;
+            margin: 10px 0;
+            color: #555;
+        }
+        
+        /* Content Structure Display */
+        .chapter-list {
+            margin: 20px 0;
+        }
+        
+        .chapter-item {
+            background: #f9f9f9;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        
+        .chapter-title {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .lesson-item {
+            background: white;
+            padding: 12px;
+            margin: 8px 0 8px 20px;
+            border-radius: 6px;
+            border-left: 3px solid var(--accent);
+        }
+        
+        .lesson-title {
+            font-weight: bold;
+            color: var(--success);
+            margin-bottom: 8px;
+        }
+        
+        .point-item {
+            padding: 8px;
+            margin: 5px 0 5px 20px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+        
+        /* Loading */
+        .loading { 
+            text-align: center; 
+            padding: 40px; 
+            font-style: italic;
+            color: #666;
+        }
+        
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        
+        /* Score Table */
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .score-table th, .score-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        
+        .score-table th {
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .score-table tr:nth-child(even) { 
+            background: #f9f9f9; 
+        }
+        
+        .score-table tr:hover { 
+            background: #e8f5e9; 
+        }
+        
+        /* Helper Classes */
+        .text-center {
+            text-align: center;
+        }
+        
+        .text-muted {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .mt-20 {
+            margin-top: 20px;
+        }
+        
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+        
+        /* Messages */
+        .success-message {
+            background: #c8e6c9;
+            color: var(--success);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid var(--success);
+        }
+        
+        .info-message {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #1976d2;
+        }
+        
+        .warning-message {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #ffc107;
+        }
+        
+        /* Login Form */
+        #authContainer {
+            max-width: 400px;
+            margin: 100px auto;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: #ddd;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .auth-tab.active {
+            background: white;
+            color: var(--primary);
+        }
+        
+        .auth-tab:first-child {
+            border-radius: 8px 0 0 0;
+        }
+        
+        .auth-tab:last-child {
+            border-radius: 0 8px 0 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <h1>🎓 Hệ Thống Học Tập</h1>
+        <div class="user-info" id="userInfo"></div>
+    </header>
+
+    <!-- Auth Container -->
+    <div id="authContainer" class="container">
+        <div class="card">
+            <h2 class="text-center mb-20">Đăng Nhập / Đăng Ký</h2>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="showAuthTab('login')">Đăng Nhập</button>
+                <button class="auth-tab" onclick="showAuthTab('register')">Đăng Ký</button>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="loginForm">
+                <label>Email:</label>
+                <input type="email" id="loginEmail" placeholder="Nhập email của bạn">
+                
+                <label>Mật khẩu:</label>
+                <input type="password" id="loginPassword" placeholder="Nhập mật khẩu">
+                
+                <button class="btn btn-primary" style="width:100%; margin-top:20px;" onclick="login()">
+                    🔐 Đăng Nhập
+                </button>
+            </div>
+            
+            <!-- Register Form -->
+            <div id="registerForm" class="hidden">
+                <label>Email:</label>
+                <input type="email" id="registerEmail" placeholder="Nhập email của bạn">
+                
+                <label>Mật khẩu:</label>
+                <input type="password" id="registerPassword" placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)">
+                
+                <label>Loại tài khoản:</label>
+                <select id="registerRole">
+                    <option value="student">Học Sinh</option>
+                    <option value="teacher">Giáo Viên</option>
+                </select>
+                
+                <button class="btn btn-success" style="width:100%; margin-top:20px;" onclick="register()">
+                    ✍️ Đăng Ký
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="appContainer" class="hidden">
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs" id="navTabs"></div>
+        
+        <!-- Main Content -->
+        <div class="container">
+            <!-- TEACHER: Content Management Tab -->
+            <div id="tabContentManage" class="hidden">
+                <div class="card">
+                    <h2>📚 Quản Lý Nội Dung Học Tập</h2>
+                    <p class="text-muted">Tạo nội dung học tập theo cấu trúc: Chương → Bài → Ý kiến thức</p>
+                    
+                    <label>📖 Tên Chương:</label>
+                    <input type="text" id="chapterName" placeholder="VD: Chương 1 - Tế bào">
+                    
+                    <label>📝 Tên Bài:</label>
+                    <input type="text" id="lessonName" placeholder="VD: Bài 1 - Cấu trúc tế bào">
+                    
+                    <label>💡 Ý Kiến Thức (mỗi dòng là một ý):</label>
+                    <textarea id="pointsContent" rows="10" placeholder="Nhập các ý kiến thức, mỗi dòng là một ý.
+
+Quy ước:
+- Từ trong dấu {từ} học sinh có thể điền bất kỳ vị trí nào
+- Từ trong dấu [từ] học sinh phải điền đúng vị trí
+
+Ví dụ:
+Tế bào là {đơn vị} cơ bản của [sự sống]
+Tế bào được bao bọc bởi {màng} tế bào
+Nhân tế bào chứa [vật chất di truyền]"></textarea>
+                    
+                    <div class="text-center mt-20">
+                        <button class="btn btn-primary" onclick="saveContent()">
+                            💾 Lưu Nội Dung
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewAllContent()">
+                            👁️ Xem Tất Cả Nội Dung
+                        </button>
+                    </div>
+                    
+                    <div id="contentPreview" class="mt-20"></div>
+                </div>
+            </div>
+            
+            <!-- STUDENT: Checklist Tab -->
+            <div id="tabChecklist" class="hidden">
+                <div class="card">
+                    <h2>✅ Checklist Kiến Thức</h2>
+                    <p class="text-muted">Đánh dấu những ý kiến thức mà em đã biết</p>
+                    
+                    <div id="checklistContent" class="loading">Đang tải...</div>
+                    
+                    <div class="text-center mt-20">
+                        <button class="btn btn-success" onclick="saveChecklist()">
+                            💾 Lưu Checklist
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- STUDENT: Test Tab (Fill in blanks for known items) -->
+            <div id="tabTest" class="hidden">
+                <div class="card">
+                    <h2>✍️ Kiểm Tra (Điền Khuyết)</h2>
+                    <p class="text-muted">Kiểm tra lại những kiến thức em đã đánh dấu là biết</p>
+                    
+                    <div id="testContent" class="loading">Đang tải...</div>
+                    
+                    <div class="text-center mt-20">
+                        <button class="btn btn-accent" onclick="checkTest()">
+                            🎯 Chấm Điểm
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetTest()">
+                            🔄 Làm Lại
+                        </button>
+                    </div>
+                    
+                    <div id="testResult"></div>
+                </div>
+            </div>
+            
+            <!-- STUDENT: Practice Tab (Drag & drop for unknown items) -->
+            <div id="tabPractice" class="hidden">
+                <div class="card">
+                    <h2>🎯 Củng Cố (Kéo Thả)</h2>
+                    <p class="text-muted">Học lại những kiến thức em chưa biết bằng cách kéo thả</p>
+                    
+                    <div id="practiceContent" class="loading">Đang tải...</div>
+                    
+                    <div class="text-center mt-20">
+                        <button class="btn btn-accent" onclick="checkPractice()">
+                            🎯 Chấm Điểm
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetPractice()">
+                            🔄 Làm Lại
+                        </button>
+                    </div>
+                    
+                    <div id="practiceResult"></div>
+                </div>
+            </div>
+            
+            <!-- STUDENT: Scores Tab -->
+            <div id="tabScores" class="hidden">
+                <div class="card">
+                    <h2>📊 Bảng Điểm Của Em</h2>
+                    
+                    <div id="scoresContent"></div>
+                </div>
+            </div>
+            
+            <!-- TEACHER: Class Scores Tab -->
+            <div id="tabClassScores" class="hidden">
+                <div class="card">
+                    <h2>📊 Bảng Điểm Lớp</h2>
+                    
+                    <div id="classScoresContent" class="loading">Đang tải...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-DMCkm7iGHXu5M2Mn_pCGYoAABa2xMdc",
+            authDomain: "ontapsinhhoc2026.firebaseapp.com",
+            databaseURL: "https://ontapsinhhoc2026-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "ontapsinhhoc2026",
+            storageBucket: "ontapsinhhoc2026.firebasestorage.app",
+            messagingSenderId: "728917587024",
+            appId: "1:728917587024:web:035baa280c88d3d41b8d55"
+            measurementId: "G-VRXMFWRZ7L"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        
+        // Global Variables
+        let currentUser = null;
+        let userRole = null;
+        let allContent = [];
+        let userChecklist = [];
+        
+        // Auth State Observer
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                loadUserData();
+            } else {
+                currentUser = null;
+                document.getElementById('authContainer').classList.remove('hidden');
+                document.getElementById('appContainer').classList.add('hidden');
+            }
+        });
+        
+        // Show Auth Tab
+        function showAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (tab === 'login') {
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('registerForm').classList.add('hidden');
+            } else {
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('registerForm').classList.remove('hidden');
+            }
+        }
+        
+        // Login Function
+        async function login() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                alert('Vui lòng nhập đầy đủ thông tin!');
+                return;
+            }
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                alert('Đăng nhập thất bại: ' + error.message);
+            }
+        }
+        
+        // Register Function
+        async function register() {
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const role = document.getElementById('registerRole').value;
+            
+            if (!email || !password) {
+                alert('Vui lòng nhập đầy đủ thông tin!');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('Mật khẩu phải có ít nhất 6 ký tự!');
+                return;
+            }
+            
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // Save user role to database
+                await db.ref('users/' + user.uid).set({
+                    email: email,
+                    role: role,
+                    checklist: [],
+                    scores: {
+                        test: { score: 0, correct: 0, total: 0, time: 'Chưa làm' },
+                        practice: { score: 0, correct: 0, total: 0, time: 'Chưa làm' }
+                    }
+                });
+                
+                alert('Đăng ký thành công!');
+            } catch (error) {
+                alert('Đăng ký thất bại: ' + error.message);
+            }
+        }
+        
+        // Load User Data
+        async function loadUserData() {
+            try {
+                const snapshot = await db.ref('users/' + currentUser.uid).once('value');
+                const userData = snapshot.val();
+                
+                if (userData) {
+                    userRole = userData.role;
+                    userChecklist = userData.checklist || [];
+                    
+                    document.getElementById('userInfo').innerHTML = `
+                        👤 ${userData.email} (${userRole === 'teacher' ? 'Giáo Viên' : 'Học Sinh'})
+                        <button class="btn btn-secondary" style="padding: 5px 15px; margin-left: 15px;" onclick="logout()">
+                            🚪 Đăng Xuất
+                        </button>
+                    `;
+                    
+                    setupUI();
+                    await loadContent();
+                    
+                    document.getElementById('authContainer').classList.add('hidden');
+                    document.getElementById('appContainer').classList.remove('hidden');
+                } else {
+                    alert('Không tìm thấy thông tin người dùng!');
+                    logout();
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                alert('Lỗi tải dữ liệu người dùng!');
+            }
+        }
+        
+        // Logout Function
+        function logout() {
+            auth.signOut();
+        }
+        
+        // Setup UI based on role
+        function setupUI() {
+            const navTabs = document.getElementById('navTabs');
+            
+            if (userRole === 'teacher') {
+                navTabs.innerHTML = `
+                    <button onclick="showTab('tabContentManage')" class="active">📚 Quản Lý Nội Dung</button>
+                    <button onclick="showTab('tabClassScores')">📊 Bảng Điểm Lớp</button>
+                `;
+                showTab('tabContentManage');
+            } else {
+                navTabs.innerHTML = `
+                    <button onclick="showTab('tabChecklist')" class="active">✅ Checklist</button>
+                    <button onclick="showTab('tabTest')">✍️ Kiểm Tra</button>
+                    <button onclick="showTab('tabPractice')">🎯 Củng Cố</button>
+                    <button onclick="showTab('tabScores')">📊 Điểm Của Em</button>
+                `;
+                showTab('tabChecklist');
+            }
+        }
+        
+        // Show Tab
+        function showTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('[id^="tab"]').forEach(tab => tab.classList.add('hidden'));
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.nav-tabs button').forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabId).classList.remove('hidden');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // Load content based on tab
+            if (tabId === 'tabChecklist') renderChecklist();
+            else if (tabId === 'tabTest') renderTest();
+            else if (tabId === 'tabPractice') renderPractice();
+            else if (tabId === 'tabScores') renderScores();
+            else if (tabId === 'tabClassScores') renderClassScores();
+        }
+        
+        // Load Content from Database
+        async function loadContent() {
+            try {
+                const snapshot = await db.ref('content').once('value');
+                const data = snapshot.val();
+                
+                allContent = [];
+                
+                if (data) {
+                    Object.keys(data).forEach(chapterKey => {
+                        const chapter = data[chapterKey];
+                        Object.keys(chapter.lessons || {}).forEach(lessonKey => {
+                            const lesson = chapter.lessons[lessonKey];
+                            (lesson.points || []).forEach((point, idx) => {
+                                allContent.push({
+                                    id: `${chapterKey}_${lessonKey}_${idx}`,
+                                    chapter: chapter.name,
+                                    lesson: lesson.name,
+                                    text: point
+                                });
+                            });
+                        });
+                    });
+                }
+                
+                console.log('Loaded content:', allContent.length, 'items');
+            } catch (error) {
+                console.error('Error loading content:', error);
+            }
+        }
+        
+        // TEACHER: Save Content
+        async function saveContent() {
+            const chapterName = document.getElementById('chapterName').value.trim();
+            const lessonName = document.getElementById('lessonName').value.trim();
+            const pointsContent = document.getElementById('pointsContent').value.trim();
+            
+            if (!chapterName || !lessonName || !pointsContent) {
+                alert('Vui lòng nhập đầy đủ thông tin!');
+                return;
+            }
+            
+            const points = pointsContent.split('\n').filter(line => line.trim() !== '');
+            
+            if (points.length === 0) {
+                alert('Vui lòng nhập ít nhất một ý kiến thức!');
+                return;
+            }
+            
+            try {
+                const chapterKey = chapterName.replace(/[^a-zA-Z0-9]/g, '_');
+                const lessonKey = lessonName.replace(/[^a-zA-Z0-9]/g, '_');
+                
+                await db.ref(`content/${chapterKey}`).update({
+                    name: chapterName
+                });
+                
+                await db.ref(`content/${chapterKey}/lessons/${lessonKey}`).set({
+                    name: lessonName,
+                    points: points
+                });
+                
+                alert('✅ Lưu nội dung thành công!');
+                
+                // Clear form
+                document.getElementById('chapterName').value = '';
+                document.getElementById('lessonName').value = '';
+                document.getElementById('pointsContent').value = '';
+                
+                // Reload content
+                await loadContent();
+            } catch (error) {
+                alert('Lỗi lưu nội dung: ' + error.message);
+            }
+        }
+        
+        // TEACHER: View All Content
+        async function viewAllContent() {
+            try {
+                const snapshot = await db.ref('content').once('value');
+                const data = snapshot.val();
+                
+                const preview = document.getElementById('contentPreview');
+                
+                if (!data || Object.keys(data).length === 0) {
+                    preview.innerHTML = '<div class="info-message">Chưa có nội dung nào được tạo.</div>';
+                    return;
+                }
+                
+                let html = '<div class="chapter-list">';
+                
+                Object.keys(data).forEach(chapterKey => {
+                    const chapter = data[chapterKey];
+                    html += `<div class="chapter-item">
+                        <div class="chapter-title">📖 ${chapter.name}</div>`;
+                    
+                    Object.keys(chapter.lessons || {}).forEach(lessonKey => {
+                        const lesson = chapter.lessons[lessonKey];
+                        html += `<div class="lesson-item">
+                            <div class="lesson-title">📝 ${lesson.name}</div>`;
+                        
+                        (lesson.points || []).forEach((point, idx) => {
+                            html += `<div class="point-item">💡 ${idx + 1}. ${point}</div>`;
+                        });
+                        
+                        html += '</div>';
+                    });
+                    
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+                preview.innerHTML = html;
+            } catch (error) {
+                console.error('Error viewing content:', error);
+            }
+        }
+        
+        // STUDENT: Render Checklist
+        function renderChecklist() {
+            const container = document.getElementById('checklistContent');
+            
+            if (allContent.length === 0) {
+                container.innerHTML = '<div class="info-message">Chưa có nội dung học tập nào. Vui lòng chờ giáo viên cập nhật.</div>';
+                return;
+            }
+            
+            let currentChapter = '';
+            let currentLesson = '';
+            let html = '<div class="chapter-list">';
+            
+            allContent.forEach(item => {
+                if (item.chapter !== currentChapter) {
+                    if (currentChapter !== '') html += '</div></div>';
+                    currentChapter = item.chapter;
+                    html += `<div class="chapter-item">
+                        <div class="chapter-title">📖 ${currentChapter}</div>`;
+                }
+                
+                if (item.lesson !== currentLesson) {
+                    if (currentLesson !== '') html += '</div>';
+                    currentLesson = item.lesson;
+                    html += `<div class="lesson-item">
+                        <div class="lesson-title">📝 ${currentLesson}</div>`;
+                }
+                
+                const checked = userChecklist.includes(item.id) ? 'checked' : '';
+                html += `<div class="checkbox-item">
+                    <input type="checkbox" id="check_${item.id}" value="${item.id}" ${checked}>
+                    <label for="check_${item.id}">${item.text}</label>
+                </div>`;
+            });
+            
+            html += '</div></div></div>';
+            container.innerHTML = html;
+        }
+        
+        // STUDENT: Save Checklist
+        async function saveChecklist() {
+            const checkboxes = document.querySelectorAll('#checklistContent input[type="checkbox"]');
+            const newChecklist = [];
+            
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    newChecklist.push(cb.value);
+                }
+            });
+            
+            try {
+                await db.ref(`users/${currentUser.uid}/checklist`).set(newChecklist);
+                userChecklist = newChecklist;
+                alert('✅ Lưu checklist thành công!');
+            } catch (error) {
+                alert('Lỗi lưu checklist: ' + error.message);
+            }
+        }
+        
+        // STUDENT: Render Test (Fill in blanks for known items)
+        function renderTest() {
+            const container = document.getElementById('testContent');
+            
+            const knownItems = allContent.filter(item => userChecklist.includes(item.id));
+            
+            if (knownItems.length === 0) {
+                container.innerHTML = '<div class="info-message">Em chưa đánh dấu ý nào là đã biết. Vui lòng quay lại tab Checklist để đánh dấu.</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            knownItems.forEach((item, idx) => {
+                let questionHtml = item.text;
+                let blankIndex = 0;
+                
+                // Replace {word} and [word] with input fields
+                questionHtml = questionHtml.replace(/\{([^}]+)\}|\[([^\]]+)\]/g, (match, group1, group2) => {
+                    const word = (group1 || group2).trim();
+                    const type = group1 ? 'free' : 'fixed';
+                    const id = `test_${idx}_${blankIndex}`;
+                    blankIndex++;
+                    return `<input type="text" class="fill-blank" id="${id}" data-answer="${word}" data-type="${type}">`;
+                });
+                
+                html += `<div class="card">
+                    <strong>Câu ${idx + 1}:</strong>
+                    <div class="drag-sentence">${questionHtml}</div>
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+            document.getElementById('testResult').innerHTML = '';
+        }
+        
+        // STUDENT: Check Test
+        function checkTest() {
+            const blanks = document.querySelectorAll('#testContent .fill-blank');
+            let total = blanks.length;
+            let correct = 0;
+            
+            blanks.forEach(blank => {
+                const userAnswer = blank.value.trim().toLowerCase();
+                const correctAnswer = blank.dataset.answer.toLowerCase();
+                const type = blank.dataset.type;
+                
+                blank.classList.remove('correct', 'incorrect');
+                
+                if (type === 'free') {
+                    // For {word}, just check if answer is not empty (flexible)
+                    if (userAnswer && userAnswer.length > 0) {
+                        blank.classList.add('correct');
+                        correct++;
+                    } else {
+                        blank.classList.add('incorrect');
+                    }
+                } else {
+                    // For [word], must match exactly
+                    if (userAnswer === correctAnswer) {
+                        blank.classList.add('correct');
+                        correct++;
+                    } else {
+                        blank.classList.add('incorrect');
+                    }
+                }
+            });
+            
+            const score = total === 0 ? 0 : parseFloat((correct / total * 10).toFixed(1));
+            const percent = total === 0 ? 0 : Math.round(correct / total * 100);
+            
+            document.getElementById('testResult').innerHTML = `
+                <div class="score-box">
+                    <h3>🎯 Kết Quả Kiểm Tra</h3>
+                    <div class="big-score">${score}</div>
+                    <div class="score-detail">Đúng ${correct}/${total} câu (${percent}%)</div>
+                    <div class="text-muted">⏰ ${new Date().toLocaleString('vi-VN')}</div>
+                </div>
+            `;
+            
+            // Save score to database
+            db.ref(`users/${currentUser.uid}/scores/test`).set({
+                score: score,
+                correct: correct,
+                total: total,
+                time: new Date().toLocaleString('vi-VN')
+            });
+        }
+        
+        // STUDENT: Reset Test
+        function resetTest() {
+            document.querySelectorAll('#testContent .fill-blank').forEach(blank => {
+                blank.value = '';
+                blank.classList.remove('correct', 'incorrect');
+            });
+            document.getElementById('testResult').innerHTML = '';
+        }
+        
+        // STUDENT: Render Practice (Drag & drop for unknown items)
+        function renderPractice() {
+            const container = document.getElementById('practiceContent');
+            
+            const unknownItems = allContent.filter(item => !userChecklist.includes(item.id));
+            
+            if (unknownItems.length === 0) {
+                container.innerHTML = '<div class="success-message">🎉 Chúc mừng em! Em đã đánh dấu thuộc hết tất cả các ý rồi!</div>';
+                return;
+            }
+            
+            // Get all possible words for noise
+            const allWords = [];
+            allContent.forEach(item => {
+                const matches = item.text.match(/\{([^}]+)\}|\[([^\]]+)\]/g) || [];
+                matches.forEach(m => {
+                    const word = m.replace(/[{}[\]]/g, '').trim();
+                    if (!allWords.includes(word)) allWords.push(word);
+                });
+            });
+            
+            let html = '';
+            
+            unknownItems.forEach((item, idx) => {
+                let questionHtml = item.text;
+                const correctWords = [];
+                
+                // Replace {word} and [word] with drop zones
+                questionHtml = questionHtml.replace(/\{([^}]+)\}|\[([^\]]+)\]/g, (match, group1, group2) => {
+                    const word = (group1 || group2).trim();
+                    correctWords.push(word);
+                    return `<span class="drop-zone" data-answer="${word}" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></span>`;
+                });
+                
+                // Get noise words (3 random words not in this sentence)
+                const noiseWords = allWords
+                    .filter(w => !correctWords.includes(w))
+                    .sort(() => Math.random() - 0.5)
+                    .slice(0, 3);
+                
+                // Combine and shuffle all words
+                const allDragWords = [...correctWords, ...noiseWords]
+                    .sort(() => Math.random() - 0.5);
+                
+                html += `<div class="card drag-container">
+                    <strong>Câu ${idx + 1}:</strong>
+                    <div class="drag-sentence">${questionHtml}</div>
+                    
+                    <div class="drag-pool">
+                        <div class="drag-pool-title">📦 Kéo các từ vào vị trí phù hợp:</div>
+                        ${allDragWords.map(word => 
+                            `<span class="drag-item" draggable="true" ondragstart="dragStart(event)" ondragend="dragEnd(event)">${word}</span>`
+                        ).join('')}
+                    </div>
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+            document.getElementById('practiceResult').innerHTML = '';
+        }
+        
+        // Drag & Drop Functions
+        let draggedElement = null;
+        
+        function dragStart(e) {
+            draggedElement = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', e.target.innerHTML);
+        }
+        
+        function dragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+        
+        function allowDrop(e) {
+            if (e.preventDefault) e.preventDefault();
+            if (e.target.classList.contains('drop-zone')) {
+                e.target.classList.add('drag-over');
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+        
+        function dragLeave(e) {
+            if (e.target.classList.contains('drop-zone')) {
+                e.target.classList.remove('drag-over');
+            }
+        }
+        
+        function drop(e) {
+            if (e.stopPropagation) e.stopPropagation();
+            e.preventDefault();
+            
+            if (e.target.classList.contains('drop-zone') && draggedElement) {
+                // If drop zone is empty
+                if (!e.target.textContent.trim()) {
+                    e.target.textContent = draggedElement.textContent;
+                    e.target.classList.remove('drag-over');
+                    draggedElement.remove();
+                }
+            }
+            
+            return false;
+        }
+        
+        // STUDENT: Check Practice
+        function checkPractice() {
+            const dropZones = document.querySelectorAll('#practiceContent .drop-zone');
+            let total = dropZones.length;
+            let correct = 0;
+            
+            dropZones.forEach(zone => {
+                const userAnswer = zone.textContent.trim().toLowerCase();
+                const correctAnswer = zone.dataset.answer.toLowerCase();
+                
+                zone.classList.remove('correct', 'incorrect');
+                
+                if (userAnswer === correctAnswer) {
+                    zone.classList.add('correct');
+                    correct++;
+                } else {
+                    zone.classList.add('incorrect');
+                }
+            });
+            
+            const score = total === 0 ? 0 : parseFloat((correct / total * 10).toFixed(1));
+            const percent = total === 0 ? 0 : Math.round(correct / total * 100);
+            
+            document.getElementById('practiceResult').innerHTML = `
+                <div class="score-box" style="border-color: var(--accent);">
+                    <h3>🎯 Kết Quả Củng Cố</h3>
+                    <div class="big-score">${score}</div>
+                    <div class="score-detail">Đúng ${correct}/${total} câu (${percent}%)</div>
+                    <div class="text-muted">⏰ ${new Date().toLocaleString('vi-VN')}</div>
+                </div>
+            `;
+            
+            // Save score to database
+            db.ref(`users/${currentUser.uid}/scores/practice`).set({
+                score: score,
+                correct: correct,
+                total: total,
+                time: new Date().toLocaleString('vi-VN')
+            });
+        }
+        
+        // STUDENT: Reset Practice
+        function resetPractice() {
+            renderPractice();
+        }
+        
+        // STUDENT: Render Scores
+        async function renderScores() {
+            const container = document.getElementById('scoresContent');
+            
+            try {
+                const snapshot = await db.ref(`users/${currentUser.uid}/scores`).once('value');
+                const scores = snapshot.val() || {};
+                
+                const testScore = scores.test || { score: 0, correct: 0, total: 0, time: 'Chưa làm' };
+                const practiceScore = scores.practice || { score: 0, correct: 0, total: 0, time: 'Chưa làm' };
+                
+                const avgScore = ((parseFloat(testScore.score) + parseFloat(practiceScore.score)) / 2).toFixed(1);
+                
+                container.innerHTML = `
+                    <div class="score-box">
+                        <h3>✍️ Phần Kiểm Tra (Đã biết)</h3>
+                        <div class="big-score">${testScore.score}</div>
+                        <div class="score-detail">Đúng ${testScore.correct}/${testScore.total} câu</div>
+                        <div class="text-muted">⏰ ${testScore.time}</div>
+                    </div>
+                    
+                    <div class="score-box" style="border-color: var(--accent);">
+                        <h3>🎯 Phần Củng Cố (Chưa biết)</h3>
+                        <div class="big-score">${practiceScore.score}</div>
+                        <div class="score-detail">Đúng ${practiceScore.correct}/${practiceScore.total} câu</div>
+                        <div class="text-muted">⏰ ${practiceScore.time}</div>
+                    </div>
+                    
+                    <div class="score-box" style="border-color: #1976d2; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+                        <h3>🏆 Điểm Trung Bình Tổng</h3>
+                        <div class="big-score" style="color: #1976d2;">${avgScore}</div>
+                    </div>
+                `;
+            } catch (error) {
+                container.innerHTML = '<div class="warning-message">Lỗi tải điểm: ' + error.message + '</div>';
+            }
+        }
+        
+        // TEACHER: Render Class Scores
+        async function renderClassScores() {
+            const container = document.getElementById('classScoresContent');
+            
+            try {
+                const snapshot = await db.ref('users').once('value');
+                const users = snapshot.val() || {};
+                
+                const students = Object.entries(users).filter(([uid, data]) => data.role === 'student');
+                
+                if (students.length === 0) {
+                    container.innerHTML = '<div class="info-message">Chưa có học sinh nào trong hệ thống.</div>';
+                    return;
+                }
+                
+                let html = `<table class="score-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align:center;">STT</th>
+                            <th>📧 Email</th>
+                            <th style="text-align:center;">✍️ Kiểm Tra</th>
+                            <th style="text-align:center;">⏰ Thời gian</th>
+                            <th style="text-align:center;">🎯 Củng Cố</th>
+                            <th style="text-align:center;">⏰ Thời gian</th>
+                            <th style="text-align:center;">🏆 Trung Bình</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                
+                students.forEach(([uid, userData], index) => {
+                    const testScore = userData.scores?.test || { score: 0, time: 'Chưa làm' };
+                    const practiceScore = userData.scores?.practice || { score: 0, time: 'Chưa làm' };
+                    const avgScore = ((parseFloat(testScore.score) + parseFloat(practiceScore.score)) / 2).toFixed(1);
+                    
+                    html += `<tr>
+                        <td style="text-align:center;">${index + 1}</td>
+                        <td>${userData.email}</td>
+                        <td style="text-align:center; font-weight:bold; color: var(--primary);">${testScore.score}</td>
+                        <td style="text-align:center; font-size:0.85em;">${testScore.time}</td>
+                        <td style="text-align:center; font-weight:bold; color: var(--accent);">${practiceScore.score}</td>
+                        <td style="text-align:center; font-size:0.85em;">${practiceScore.time}</td>
+                        <td style="text-align:center; font-weight:bold; font-size:1.2em; color: #1976d2;">${avgScore}</td>
+                    </tr>`;
+                });
+                
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = '<div class="warning-message">Lỗi tải dữ liệu: ' + error.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>
